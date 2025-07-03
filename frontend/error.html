@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>LAN File Transfer Utility</title>
+        <link rel="stylesheet" href="./src/xp.css">
+    <link rel="stylesheet" href="./src/error.css">
+    <script>
+        (new Audio("./src/error.mp3")).play()
+    </script>
+</head>
+<body>
+    <div class="window main-window">
+        <div class="title-bar main-window-title">
+            <div class="title-bar-text">LAN File Transfer Utility</div>
+            <div class="title-bar-controls">
+            <button class="main-min" aria-label="Minimize"></button>
+            <button disabled style="cursor: not-allowed;" aria-label="Maximize"></button>
+            <button class="main-close" aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="flex">
+                <img src="./src/error.png" alt="">
+                <p class="errormsg">An error occured launch XPSync. Check that you dont already have XPSync open.</p>
+            </div>
+
+            <button>Ok</button>
+        </div>
+
+    </div>
+    <script src="./src/events.js" type="module"></script>
+</body>
+</html>

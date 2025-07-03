@@ -1,0 +1,52 @@
+.main-window {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    user-select: none;
+}
+
+.main-window-title {
+    cursor: grab;
+    --wails-draggable:drag
+}
+.main-window-title:active {
+    cursor: grabbing;
+}
+.buttons {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+}
+.header {
+    display: flex;
+    flex-direction: row;
+    background: linear-gradient(to right, #abbfff, #2848db);
+    align-items: center;
+    height: 65px;
+    padding-left: 7px;
+}
+.header img {
+    width: 48px;
+    height: 48px;
+    margin-right: 15px;
+}
+.window-body {
+    margin: 0px 3px 0px;
+}
+.window-content {
+    margin: 8px 5px 8px;
+}
+h2 {
+    margin: 0;
+    font-weight: normal;
+    font-size: 1.3rem;
+    height: max-content;
+    width: max-content;
+    color: white;
+}
+
+body {
+    margin: 0;
+}

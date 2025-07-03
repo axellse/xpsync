@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAN File Transfer Utility (XPSync) Web Interface</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 14px;
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+        }
+        .header img {
+            margin-right: 15px;
+        }
+        h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: normal;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/axellse/idk/refs/heads/main/icon.png" alt="">
+        <div>
+            <h2>LAN File Transfer</h2>
+            <h2 style="font-weight: bold;">Web Portal</h2>
+        </div>
+    </div>
+    <p id="status">Idle.</p>
+    <p>Welcome to the XPSync Web Portal. Here, you can send and receive files to the connected host machine.</p>
+    <p id="message" style="font-style: italic; margin-bottom: 0.3rem;">Waiting for host machine to pick an action. Choose "Send File" or "Receive File" on the host.</p>
+    <form enctype="multipart/form-data" style="display: none;" id="sendform" action="" method="post">
+        <input type="file" name="file" id="file">
+        <button>Upload</button>
+    </form>
+    
+</body>
+<script>
+    async function startTransferLoop() {
+        while (true) {
+            document.querySelector('#status').innerText = "Transferring, please wait..."
+            const request = await fetch("/transfer")
+            const json = await request.json()
+            document.querySelector('#status').innerText = "Idle"
+
+            if (json.status == "yield") {
+                await new Promise(resolve => setTimeout(resolve, 700))
+                continue
+            }
+
+            if (json.status == "download") {
+                document.querySelector('#message').innerHTML = `The host machine has transferred a file. The download should start automatically, but if it doesn't, <a id="filedownload" href="${json.url}">press here</a>`
+                document.querySelector('#sendform').style.display = "none"
+
+                document.querySelector('#filedownload').download = json.filename;
+                document.querySelector('#filedownload').click();
+            } else if (json.status == "upload") {
+                document.querySelector('#message').innerHTML = `The host machine has requested a file transfer. Use the form below to upload a file.`
+                document.querySelector('#sendform').style.display = "block"
+                document.querySelector('#sendform').setAttribute("action", json.url)
+            }
+        }
+    }
+    startTransferLoop()
+</script>
+</html>
