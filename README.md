@@ -5,4 +5,4 @@ i have a problem whenever i try to move files between my phone and my computer. 
 
 xpsync solves all of these problems: it's extremly fast and privacy respecting since files never leave your local network, and theres of course no file limit. You can transfer files from and to everything with a web browser (smart fridge included).
 ## getting started
-see the release tab for precompiled binaries. Compiling yourself is also very easy, see [this guide](https://wails.io/docs/gettingstarted/installation).
+see the release tab for precompiled binaries for windows. Compiling yourself is also very easy, see [this guide](https://wails.io/docs/gettingstarted/installation).
