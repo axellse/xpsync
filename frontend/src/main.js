@@ -3,6 +3,7 @@ import './main.css';
 import './events.js'
 import { GetValidDevices, SendFile, GetLocalIp, RecvFile } from "../wailsjs/go/main/App";
 
+document.body.style.zoom = "calc(100% / " + window.devicePixelRatio + ")"
 document.querySelector('.refresh').addEventListener("click", async () => {
     document.querySelector('#device').innerHTML = ""
     let devs = await GetValidDevices()
