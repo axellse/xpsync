@@ -1,21 +1,5 @@
 package main
 
-import (
-	"net/http"
-)
-
-type RouterMiddleWare struct {
-	Page        string //page to show
-	NextHandler http.Handler
-}
-
-func (rm RouterMiddleWare) ServeHTTP(rw http.ResponseWriter, rq *http.Request) {
-	if rq.URL.Path == "." || rq.URL.Path == "/" {
-		rq.URL.Path = rm.Page
-	}
-	rm.NextHandler.ServeHTTP(rw, rq)
-}
-
 type Action struct {
 	Type string //either ToDevice or FromDevice. If type is "" the action is ignored
 	FileName string //only populated if type is ToDevice
