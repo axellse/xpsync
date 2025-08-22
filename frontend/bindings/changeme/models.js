@@ -6,6 +6,10 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as io$0 from "../io/models.js";
+
 export class Action {
     /**
      * Creates a new Action instance.
@@ -22,27 +26,26 @@ export class Action {
         }
         if (!("FileName" in $$source)) {
             /**
-             * only populated if type is ToDevice
              * @member
              * @type {string}
              */
             this["FileName"] = "";
         }
-        if (!("DownloadCallback" in $$source)) {
-            /**
-             * only populated if type is FromDevice
-             * @member
-             * @type {any | null}
-             */
-            this["DownloadCallback"] = null;
-        }
-        if (!("Data" in $$source)) {
+        if (!("UploadReader" in $$source)) {
             /**
              * only populated if type is ToDevice
              * @member
-             * @type {string}
+             * @type {io$0.ReadSeekCloser}
              */
-            this["Data"] = "";
+            this["UploadReader"] = null;
+        }
+        if (!("DownloadBegins" in $$source)) {
+            /**
+             * only populated if type is FromDevice, called when the download has begun.
+             * @member
+             * @type {any | null}
+             */
+            this["DownloadBegins"] = null;
         }
 
         Object.assign(this, $$source);
@@ -54,11 +57,7 @@ export class Action {
      * @returns {Action}
      */
     static createFrom($$source = {}) {
-        const $$createField3_0 = $Create.ByteSlice;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Data" in $$parsedSource) {
-            $$parsedSource["Data"] = $$createField3_0($$parsedSource["Data"]);
-        }
         return new Action(/** @type {Partial<Action>} */($$parsedSource));
     }
 }

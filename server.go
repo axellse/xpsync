@@ -6,7 +6,6 @@ import (
 	"html"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,8 +40,9 @@ func SetDevicePendingAction(ip string, action Action) {
 	devices = newDevs
 }
 
-var files = map[string][]byte{}
-var fileDownloadCbs = map[string]*func(name string, data []byte){}
+//from the point of view of the device
+var uploads = map[string]*func(name string) io.WriteCloser{}
+var downloads = map[string]io.ReadSeekCloser{}
 
 func StartServer() error {
 	http.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -50,8 +50,19 @@ func StartServer() error {
 	})
 
 	http.HandleFunc("GET /file/download/{id}", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Length", strconv.Itoa(len(files[r.PathValue("id")])))
-		w.Write(files[r.PathValue("id")])
+		reader, ok := downloads[r.PathValue("id")]
+		if !ok {
+			w.Write([]byte("download failed: internal error"))
+			return
+		}
+
+		reader.Seek(0, io.SeekStart)
+		
+		_, err := io.Copy(w, reader)
+		if err != nil {
+			w.Write([]byte("download failed: could not copy file to a response"))
+			return
+		}
 	})
 
 	http.HandleFunc("POST /file/upload/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -60,20 +71,20 @@ func StartServer() error {
 			w.Write([]byte("upload failed: grabbing file: " + err.Error()))
 			return
 		}
-
 		defer file.Close()
-		ba, err := io.ReadAll(file)
-		if err != nil {
-			w.Write([]byte("upload failed: reading file"))
-			return
-		}
 
-		fptr, ok := fileDownloadCbs[r.PathValue("id")]
+		fptr, ok := uploads[r.PathValue("id")]
 		if !ok {
 			w.Write([]byte("upload failed: internal error"))
 			return
 		}
-		(*fptr)(header.Filename, ba)
+		writer := (*fptr)(header.Filename)
+		
+		_, cerr := io.Copy(writer, file)
+		if cerr != nil {
+			w.Write([]byte("upload failed: could not copy upload to a file"))
+			return
+		}
 		
 		w.Header().Add("Location", "/")
 		w.WriteHeader(301)
@@ -95,14 +106,14 @@ func StartServer() error {
 					jsonResponse.Status = "download"
 
 					id := uuid.New().String()
-					files[id] = v.PendingAction.Data
+					downloads[id] = v.PendingAction.UploadReader
 					jsonResponse.Url = "/file/download/" + id
 					jsonResponse.FileName = v.PendingAction.FileName
 				case "FromDevice":
 					jsonResponse.Status = "upload"
 					id := uuid.New().String()
 					jsonResponse.Url = "/file/upload/" + id
-					fileDownloadCbs[id] = v.PendingAction.DownloadCallback
+					uploads[id] = v.PendingAction.DownloadBegins
 				}
 
 				v.PendingAction = Action{} //clear out the pending aciton

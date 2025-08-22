@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -37,30 +38,33 @@ func (a *App) SendFile(deviceIp string) {
 	fpath, err := dialog.PromptForSingleSelection()
 	if err != nil || fpath == "" {return}
 
-	ba, err := os.ReadFile(fpath)
+	file, err := os.Open(fpath)
 	if err != nil {return}
 
 	SetDevicePendingAction(deviceIp, Action{
 		Type: "ToDevice",
 		FileName: filepath.Base(fpath),
-		Data: ba,
+		UploadReader: file,
 	})
 }
 
 func (a *App) RecvFile(deviceIp string) {
-	dcb := func (name string, data []byte) {
+	dcb := func (name string) io.WriteCloser {
 		dialog := application.SaveFileDialog()
 		dialog.SetMessage("Choose a place to save the received file.")
 		dialog.SetFilename(name)
 
 		fpath, err := dialog.PromptForSingleSelection()
-		if err != nil {return}
+		if err != nil {return nil}
 
-		os.WriteFile(fpath, data, 0666)
+		file, err := os.Create(fpath)
+		if err != nil {return nil}
+
+		return file
 	}
 	SetDevicePendingAction(deviceIp, Action{
 		Type: "FromDevice",
-		DownloadCallback: &dcb,
+		DownloadBegins: &dcb,
 	})
 }
 
