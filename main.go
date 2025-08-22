@@ -25,7 +25,7 @@ func main() {
 
 	serverErr := StartServer()
 	if serverErr != nil {
-		page = "/error.html"
+		page = "/error"
 		width = 313
 		height = 125
 	}
