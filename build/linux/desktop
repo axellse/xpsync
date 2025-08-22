@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=XPSync
+Comment=My Product Description
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/xpsync.exe %u
+Terminal=false
+Type=Application
+Icon=xpsync.exe
+Categories=Utility;
+StartupWMClass=xpsync.exe
+
+ 

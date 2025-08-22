@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // App struct
@@ -30,9 +30,11 @@ func (a *App) GetValidDevices() []Device {
 }
 
 func (a *App) SendFile(deviceIp string) {
-	fpath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Choose a file to transfer",
-	})
+	dialog := application.OpenFileDialog()
+	dialog.SetTitle("Choose a file to transfer")
+	dialog.CanChooseDirectories(false)
+
+	fpath, err := dialog.PromptForSingleSelection()
 	if err != nil || fpath == "" {return}
 
 	ba, err := os.ReadFile(fpath)
@@ -46,14 +48,15 @@ func (a *App) SendFile(deviceIp string) {
 }
 
 func (a *App) RecvFile(deviceIp string) {
-	dcb := func (name string, data []byte)  {
-		fpath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
-			Title: "Choose a place to save the receive file.",
-			DefaultFilename: name,
-		})
+	dcb := func (name string, data []byte) {
+		dialog := application.SaveFileDialog()
+		dialog.SetMessage("Choose a place to save the received file.")
+		dialog.SetFilename(name)
+
+		fpath, err := dialog.PromptForSingleSelection()
 		if err != nil {return}
 
-		os.WriteFile(fpath, data, 666)
+		os.WriteFile(fpath, data, 0666)
 	}
 	SetDevicePendingAction(deviceIp, Action{
 		Type: "FromDevice",

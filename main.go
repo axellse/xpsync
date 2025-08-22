@@ -2,18 +2,23 @@ package main
 
 import (
 	"embed"
-	"net/http"
+	"log"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
+
+// Wails uses Go's `embed` package to embed the frontend files into the binary.
+// Any files in the frontend/dist folder will be embedded into the binary and
+// made available to the frontend.
+// See https://pkg.go.dev/embed for more information.
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// main function serves as the application's entry point. It initializes the application, creates a window,
+// and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
+// logs any error that might occur.
 func main() {
-	app := NewApp()
 	page := "/"
 	width := 390
 	height := 235
@@ -25,30 +30,52 @@ func main() {
 		height = 125
 	}
 
-	err := wails.Run(&options.App{
-		Title:  "LAN File Transfer Utility (XPSync)",
-		Width:  width,
-		Height: height,
-
-		DisableResize: true,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
-			Middleware: func(next http.Handler) http.Handler {
-				return RouterMiddleWare{
-					Page: page,
-					NextHandler: next,
-				}
-			},
+	// Create a new Wails application by providing the necessary options.
+	// Variables 'Name' and 'Description' are for application metadata.
+	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
+	// 'Bind' is a list of Go struct instances. The frontend has access to the methods of these instances.
+	// 'Mac' options tailor the application when running an macOS.
+	appService := NewApp() 
+	app := application.New(application.Options{
+		Name:        "xpsync",
+		Description: "LAN File Transfer Utility (XPSync)",
+		Services: []application.Service{
+			application.NewService(appService),
 		},
-		Frameless: true,
-		BackgroundColour: &options.RGBA{R: 236, G: 233, B: 216, A: 0},
-		OnStartup:        app.startup,
-		Bind: []any{
-			app,
+		
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
+		},
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
 
+	// Create a new window with the necessary options.
+	// 'Title' is the title of the window.
+	// 'Mac' options tailor the window when running on macOS.
+	// 'BackgroundColour' is the background colour of the window.
+	// 'URL' is the URL that will be loaded into the webview.
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: "XPSync",
+		DisableResize: true,
+		Width: width,
+		Height: height,
+		Frameless: true,
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 50,
+			Backdrop:                application.MacBackdropTranslucent,
+			TitleBar:                application.MacTitleBarHiddenInset,
+		},
+		BackgroundColour: application.NewRGB(236, 233, 216),
+		URL:              page,
+	})
+
+	// Run the application. This blocks until the application has been exited.
+	err := app.Run()
+
+	// If an error occurred while running the application, log it and exit.
 	if err != nil {
-		println("Error:", err.Error())
+		log.Fatal(err)
 	}
 }
