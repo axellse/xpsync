@@ -1,17 +1,20 @@
 package main
 
 import (
-	"context"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // App struct
 type App struct {
-	ctx context.Context
+	app *application.App
 }
 
 // NewApp creates a new App application struct
@@ -19,14 +22,73 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
+func (a *App) setApp(app *application.App) {
+	a.app = app
 }
 
 func (a *App) GetValidDevices() []Device {
 	return GetValidDevices()
+}
+
+func (a *App) openTransferWindow(uuid string) {
+	w := a.app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: "XPSync",
+		DisableResize: true,
+		Width: 378,
+		Height: 250,
+		Frameless: true,
+		DevToolsEnabled: true,
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 50,
+			Backdrop:                application.MacBackdropTranslucent,
+			TitleBar:                application.MacTitleBarHiddenInset,
+		},
+		BackgroundColour: application.NewRGB(236, 233, 216),
+		URL:              "/transfer.html",
+	})
+	w.OnWindowEvent(events.Common.WindowRuntimeReady, func(event *application.WindowEvent) {
+		w.ExecJS("let transferUUID = '" + uuid + "';")
+	})
+}
+
+func (a *App) CloseTransfer(uuid string) {
+	for _, dev := range devices {
+		if dev.PendingAction.UUID == uuid {
+			dev.PendingAction.ProgressedWriter.Close()
+		}
+	}
+}
+
+func (a *App) GetTransferStatus(uuid string) (bytesCopied int64, totalBytes int64, progress float64, message string, fileName string, device string, complete bool, bytesPerSecond float64) {
+	bytesCopied = 0
+	totalBytes = 0
+	progress = float64(1)
+	message = "Transfer complete"
+	fileName = ""
+	device = ""
+	bytesPerSecond = 0
+	complete = true
+
+	for _, dev := range devices {
+		if dev.PendingAction.UUID == uuid {
+			pw := dev.PendingAction.ProgressedWriter
+			device = dev.Ip
+			if pw == nil {
+				message = "Waiting for device (might take a while for uploads)"
+				progress = 0
+				fileName = "<Unknown>"
+			} else {
+				message = "Transferring"
+				fileName = dev.PendingAction.FileName
+				totalBytes = pw.Size
+				bytesCopied = pw.BytesWritten()
+				progress = float64(bytesCopied) / float64(totalBytes)
+				bytesPerSecond = float64(bytesCopied) / time.Since(dev.PendingAction.BegunTime).Seconds()
+			}
+			complete = false
+		}
+	}
+	return
 }
 
 func (a *App) SendFile(deviceIp string) {
@@ -37,31 +99,41 @@ func (a *App) SendFile(deviceIp string) {
 	fpath, err := dialog.PromptForSingleSelection()
 	if err != nil || fpath == "" {return}
 
-	ba, err := os.ReadFile(fpath)
+	file, err := os.Open(fpath)
 	if err != nil {return}
 
+	uuid := uuid.New().String()
 	SetDevicePendingAction(deviceIp, Action{
 		Type: "ToDevice",
 		FileName: filepath.Base(fpath),
-		Data: ba,
-	})
+		UploadReader: file,
+		UUID: uuid,
+	}, "")
+	a.openTransferWindow(uuid)
 }
 
 func (a *App) RecvFile(deviceIp string) {
-	dcb := func (name string, data []byte) {
+	dcb := func (name string) io.WriteCloser {
 		dialog := application.SaveFileDialog()
 		dialog.SetMessage("Choose a place to save the received file.")
 		dialog.SetFilename(name)
 
 		fpath, err := dialog.PromptForSingleSelection()
-		if err != nil {return}
+		if err != nil {return nil}
 
-		os.WriteFile(fpath, data, 0666)
+		file, err := os.Create(fpath)
+		if err != nil {return nil}
+
+		return file
 	}
+
+	uuid := uuid.New().String()
 	SetDevicePendingAction(deviceIp, Action{
 		Type: "FromDevice",
-		DownloadCallback: &dcb,
-	})
+		DownloadBegins: &dcb,
+		UUID: uuid,
+	}, "")
+	a.openTransferWindow(uuid)
 }
 
 func  (a *App) GetLocalIp() string {

@@ -16,10 +16,26 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as $models from "./models.js";
 
 /**
+ * @param {string} uuid
+ * @returns {$CancellablePromise<void>}
+ */
+export function CloseTransfer(uuid) {
+    return $Call.ByID(2077077968, uuid);
+}
+
+/**
  * @returns {$CancellablePromise<string>}
  */
 export function GetLocalIp() {
     return $Call.ByID(153419183);
+}
+
+/**
+ * @param {string} uuid
+ * @returns {$CancellablePromise<[number, number, number, string, string, string, boolean, number]>}
+ */
+export function GetTransferStatus(uuid) {
+    return $Call.ByID(3426869438, uuid);
 }
 
 /**

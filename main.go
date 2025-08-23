@@ -25,7 +25,7 @@ func main() {
 
 	serverErr := StartServer()
 	if serverErr != nil {
-		page = "/error.html"
+		page = "/error"
 		width = 313
 		height = 125
 	}
@@ -50,6 +50,7 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
+	appService.setApp(app)
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.

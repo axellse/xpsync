@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 //go:embed transfer.html
@@ -30,10 +28,11 @@ func GetValidDevices() []Device {
 	return validDevices
 }
 
-func SetDevicePendingAction(ip string, action Action) {
+//either provide ip or uuid
+func SetDevicePendingAction(ip string, action Action, uuid string) {
 	newDevs := []Device{}
 	for _, v := range devices {
-		if v.Ip == ip {
+		if v.Ip == ip || v.PendingAction.UUID == uuid {
 			v.PendingAction = action
 		}
 		newDevs = append(newDevs, v)
@@ -41,8 +40,20 @@ func SetDevicePendingAction(ip string, action Action) {
 	devices = newDevs
 }
 
-var files = map[string][]byte{}
-var fileDownloadCbs = map[string]*func(name string, data []byte){}
+//either provide ip or uuid
+func GetDevicePendingAction(ip string, uuid string) Action {
+	for _, v := range devices {
+		if v.Ip == ip || v.PendingAction.UUID == uuid {
+			return v.PendingAction
+		}
+	}
+	return Action{}
+}
+
+
+//from the point of view of the device
+var uploads = map[string]*func(name string) io.WriteCloser{}
+var downloads = map[string]io.ReadSeekCloser{}
 
 func StartServer() error {
 	http.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -50,30 +61,68 @@ func StartServer() error {
 	})
 
 	http.HandleFunc("GET /file/download/{id}", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Length", strconv.Itoa(len(files[r.PathValue("id")])))
-		w.Write(files[r.PathValue("id")])
+		defer SetDevicePendingAction("", Action{}, r.PathValue("id"))
+
+		reader, ok := downloads[r.PathValue("id")]
+		if !ok {
+			w.Write([]byte("download failed: internal error"))
+			return
+		}
+
+		end, serr := reader.Seek(0, io.SeekEnd)
+		if serr != nil {
+			w.Write([]byte("download failed: could not get file length"))
+			return
+		}
+		w.Header().Add("Content-Length", strconv.FormatInt(end, 10))
+
+		reader.Seek(0, io.SeekStart)
+		pw := GetProgressedWriter(w, end)
+		pw.closer = reader
+
+		na := GetDevicePendingAction("", r.PathValue("id"))
+		na.ProgressedWriter = pw
+		na.BegunTime = time.Now()
+		SetDevicePendingAction("", na, r.PathValue("id"))
+		
+		_, err := io.Copy(pw, reader)
+		if err != nil {
+			w.Write([]byte("download failed: could not copy file to a response"))
+			return
+		}
 	})
 
 	http.HandleFunc("POST /file/upload/{id}", func(w http.ResponseWriter, r *http.Request) {
+		defer SetDevicePendingAction("", Action{}, r.PathValue("id"))
+
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			w.Write([]byte("upload failed: grabbing file: " + err.Error()))
 			return
 		}
-
 		defer file.Close()
-		ba, err := io.ReadAll(file)
-		if err != nil {
-			w.Write([]byte("upload failed: reading file"))
-			return
-		}
 
-		fptr, ok := fileDownloadCbs[r.PathValue("id")]
+		fptr, ok := uploads[r.PathValue("id")]
 		if !ok {
 			w.Write([]byte("upload failed: internal error"))
 			return
 		}
-		(*fptr)(header.Filename, ba)
+		writer := (*fptr)(header.Filename)
+		defer writer.Close()
+		pwriter := GetProgressedWriter(writer, header.Size)
+		pwriter.closer = writer
+
+		na := GetDevicePendingAction("", r.PathValue("id"))
+		na.ProgressedWriter = pwriter
+		na.FileName = header.Filename
+		na.BegunTime = time.Now()
+		SetDevicePendingAction("", na, r.PathValue("id"))
+
+		_, cerr := io.Copy(pwriter, file)
+		if cerr != nil {
+			w.Write([]byte("upload failed: could not copy upload to a file"))
+			return
+		}
 		
 		w.Header().Add("Location", "/")
 		w.WriteHeader(301)
@@ -89,24 +138,23 @@ func StartServer() error {
 		for _, v := range devices {
 			if strings.Split(r.RemoteAddr, ":")[0] == v.Ip {
 				v.LastPing = time.Now().Unix()
-
-				switch v.PendingAction.Type {
-				case "ToDevice":
-					jsonResponse.Status = "download"
-
-					id := uuid.New().String()
-					files[id] = v.PendingAction.Data
-					jsonResponse.Url = "/file/download/" + id
-					jsonResponse.FileName = v.PendingAction.FileName
-				case "FromDevice":
-					jsonResponse.Status = "upload"
-					id := uuid.New().String()
-					jsonResponse.Url = "/file/upload/" + id
-					fileDownloadCbs[id] = v.PendingAction.DownloadCallback
-				}
-
-				v.PendingAction = Action{} //clear out the pending aciton
 				foundDevice = true
+
+				if !v.PendingAction.Begun {
+					switch v.PendingAction.Type {
+					case "ToDevice":
+						jsonResponse.Status = "download"
+
+						downloads[v.PendingAction.UUID] = v.PendingAction.UploadReader
+						jsonResponse.Url = "/file/download/" + v.PendingAction.UUID
+						jsonResponse.FileName = v.PendingAction.FileName
+					case "FromDevice":
+						jsonResponse.Status = "upload"
+						jsonResponse.Url = "/file/upload/" + v.PendingAction.UUID
+						uploads[v.PendingAction.UUID] = v.PendingAction.DownloadBegins
+					}
+				}
+				v.PendingAction.Begun = true
 			}
 			newDevices = append(newDevices, v)
 		}
