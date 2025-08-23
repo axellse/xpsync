@@ -9,6 +9,9 @@ import { Create as $Create } from "@wailsio/runtime";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as io$0 from "../io/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as time$0 from "../time/models.js";
 
 export class Action {
     /**
@@ -26,10 +29,34 @@ export class Action {
         }
         if (!("FileName" in $$source)) {
             /**
+             * always set if type is ToDevice, set when the download has begun in case of FromDevice
              * @member
              * @type {string}
              */
             this["FileName"] = "";
+        }
+        if (!("UUID" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["UUID"] = "";
+        }
+        if (!("Begun" in $$source)) {
+            /**
+             * Whether the device already has been informed of the download
+             * @member
+             * @type {boolean}
+             */
+            this["Begun"] = false;
+        }
+        if (!("BegunTime" in $$source)) {
+            /**
+             * Timestamp when the download begun
+             * @member
+             * @type {time$0.Time}
+             */
+            this["BegunTime"] = null;
         }
         if (!("UploadReader" in $$source)) {
             /**
@@ -47,6 +74,14 @@ export class Action {
              */
             this["DownloadBegins"] = null;
         }
+        if (!("ProgressedWriter" in $$source)) {
+            /**
+             * set when the download has begun. Should NOT be written to.
+             * @member
+             * @type {ProgressedWriter | null}
+             */
+            this["ProgressedWriter"] = null;
+        }
 
         Object.assign(this, $$source);
     }
@@ -57,7 +92,11 @@ export class Action {
      * @returns {Action}
      */
     static createFrom($$source = {}) {
+        const $$createField7_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("ProgressedWriter" in $$parsedSource) {
+            $$parsedSource["ProgressedWriter"] = $$createField7_0($$parsedSource["ProgressedWriter"]);
+        }
         return new Action(/** @type {Partial<Action>} */($$parsedSource));
     }
 }
@@ -109,7 +148,7 @@ export class Device {
      * @returns {Device}
      */
     static createFrom($$source = {}) {
-        const $$createField3_0 = $$createType0;
+        const $$createField3_0 = $$createType2;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("PendingAction" in $$parsedSource) {
             $$parsedSource["PendingAction"] = $$createField3_0($$parsedSource["PendingAction"]);
@@ -118,5 +157,36 @@ export class Device {
     }
 }
 
+export class ProgressedWriter {
+    /**
+     * Creates a new ProgressedWriter instance.
+     * @param {Partial<ProgressedWriter>} [$$source = {}] - The source object to create the ProgressedWriter.
+     */
+    constructor($$source = {}) {
+        if (!("Size" in $$source)) {
+            /**
+             * Size can be set during initalization and may be used to track the expected size of the data to be written to the writer.
+             * @member
+             * @type {number}
+             */
+            this["Size"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ProgressedWriter instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {ProgressedWriter}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ProgressedWriter(/** @type {Partial<ProgressedWriter>} */($$parsedSource));
+    }
+}
+
 // Private type creation functions
-const $$createType0 = Action.createFrom;
+const $$createType0 = ProgressedWriter.createFrom;
+const $$createType1 = $Create.Nullable($$createType0);
+const $$createType2 = Action.createFrom;

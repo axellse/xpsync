@@ -9,5 +9,6 @@ export {
 
 export {
     Action,
-    Device
+    Device,
+    ProgressedWriter
 } from "./models.js";
