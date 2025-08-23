@@ -51,7 +51,7 @@ async function begin() {
             document.querySelector('.anim').setAttribute("src", "./src/filetransfer.gif")
         }
         document.querySelector('#status').innerHTML = message
-        document.querySelector('#filefrom').innerHTML = fileName + " from " + device
+        document.querySelector('#filefrom').innerHTML = fileName + " from/to " + device
         document.querySelector('.progress').setAttribute("value", progress)
 
         let bytesLeft = totalBytes - bytesCopied
