@@ -42,6 +42,14 @@ export class Action {
              */
             this["UUID"] = "";
         }
+        if (!("UploadPreWriterStatus" in $$source)) {
+            /**
+             * status of a FromDevice action before a ProgressedWriter has been created, either RequestReceived or Canceled
+             * @member
+             * @type {string}
+             */
+            this["UploadPreWriterStatus"] = "";
+        }
         if (!("Begun" in $$source)) {
             /**
              * Whether the device already has been informed of the download
@@ -92,10 +100,10 @@ export class Action {
      * @returns {Action}
      */
     static createFrom($$source = {}) {
-        const $$createField7_0 = $$createType1;
+        const $$createField8_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("ProgressedWriter" in $$parsedSource) {
-            $$parsedSource["ProgressedWriter"] = $$createField7_0($$parsedSource["ProgressedWriter"]);
+            $$parsedSource["ProgressedWriter"] = $$createField8_0($$parsedSource["ProgressedWriter"]);
         }
         return new Action(/** @type {Partial<Action>} */($$parsedSource));
     }

@@ -22,7 +22,7 @@ tasks:
       - cmd: rm -f *.syso
         platforms: [linux, darwin]
     vars:
-      BUILD_FLAGS: '-tags production -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui"'
+      BUILD_FLAGS: '-trimpath -buildvcs=false -ldflags="-w -s -H windowsgui"'
     env:
       GOOS: windows
       CGO_ENABLED: 0

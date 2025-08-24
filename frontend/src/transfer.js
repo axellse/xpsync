@@ -25,6 +25,12 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+function setAnimation(anim) {
+    if (document.querySelector('.anim').getAttribute("src") != anim) {
+        document.querySelector('.anim').setAttribute("src", anim)
+    }
+}
+
 async function begin() {
     let oldFileName = ""
     let oldDeviceName = ""
@@ -40,19 +46,28 @@ async function begin() {
             fileName = oldFileName
             device = oldDeviceName
             document.querySelector('.cancel').setAttribute('disabled', 'true')
-            document.querySelector('.anim').setAttribute("src", "./src/transfercomplete.gif")
+            setAnimation("./src/transfercomplete.gif")
 
             if (document.querySelector('#closeFinish').checked) {
                 closeWindow()
             }
-        } else if (totalBytes == 0 && document.querySelector('.anim').getAttribute('src') != "./src/transferidle.gif") {
-            document.querySelector('.anim').setAttribute("src", "./src/transferidle.gif")
-        } else if (document.querySelector('.anim').getAttribute('src') != "./src/filetransfer.gif") {
-            document.querySelector('.anim').setAttribute("src", "./src/filetransfer.gif")
+        } else if (bytesCopied == 0) {
+            setAnimation("./src/transferidle.gif")
+        } else {
+            setAnimation("./src/filetransfer.gif")
         }
         document.querySelector('#status').innerHTML = message
         document.querySelector('#filefrom').innerHTML = fileName + " from/to " + device
-        document.querySelector('.progress').setAttribute("value", progress)
+
+        if (progress == -1) {
+            progress = 0
+            if (document.querySelector('.progress').hasAttribute("value")) {
+                document.querySelector('.progress').removeAttribute("value")
+            }
+        } else {
+            document.querySelector('.progress').setAttribute("value", progress)
+        }
+        
 
         let bytesLeft = totalBytes - bytesCopied
         let etlSec = bytesLeft / bytesPerSecond
@@ -68,7 +83,7 @@ async function begin() {
             etlSec = ((etlSec / 60) % 1) * 60 //how many seconds are left
         }
 
-        etl += etlSec.toFixed(1) + " sec" + " (" + formatBytes(bytesCopied) + " of " + formatBytes(totalBytes) + " copied)"
+        etl += (bytesCopied == 0 ? "Unknown" : etlSec.toFixed(1) + " sec") + " (" + formatBytes(bytesCopied) + " of " + formatBytes(totalBytes) + " copied)"
         document.querySelector('.etl').innerHTML = complete ? "think thats gonna be 0 seconds actually" : etl
         document.querySelector('.tri').innerHTML = transferUUID
         document.querySelector('.trr').innerHTML = formatBytes(bytesPerSecond) + "/Sec"

@@ -10,6 +10,7 @@ type Action struct {
 	Type           string //either ToDevice or FromDevice. If type is "" the action is ignored
 	FileName       string //always set if type is ToDevice, set when the download has begun in case of FromDevice
 	UUID string
+	UploadPreWriterStatus string //status of a FromDevice action before a ProgressedWriter has been created, either RequestReceived or Canceled
 	Begun bool //Whether the device already has been informed of the download
 	BegunTime time.Time //Timestamp when the download begun
 	UploadReader   io.ReadSeekCloser //only populated if type is ToDevice

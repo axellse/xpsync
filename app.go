@@ -53,9 +53,10 @@ func (a *App) openTransferWindow(uuid string) {
 
 func (a *App) CloseTransfer(uuid string) {
 	for _, dev := range devices {
-		if dev.PendingAction.UUID == uuid {
+		if dev.PendingAction.UUID == uuid && dev.PendingAction.ProgressedWriter != nil {
 			dev.PendingAction.ProgressedWriter.Close()
 		}
+		dev.PendingAction.UploadPreWriterStatus = "Canceled"
 	}
 }
 
@@ -73,8 +74,12 @@ func (a *App) GetTransferStatus(uuid string) (bytesCopied int64, totalBytes int6
 		if dev.PendingAction.UUID == uuid {
 			pw := dev.PendingAction.ProgressedWriter
 			device = dev.Ip
-			if pw == nil {
-				message = "Waiting for device (might take a while for uploads)"
+			if pw == nil && dev.PendingAction.UploadPreWriterStatus == "RequestReceived" {
+				message = "Preparing"
+				progress = -1
+				fileName = "<Unknown>"
+			} else if pw == nil {
+				message = "Waiting for device"
 				progress = 0
 				fileName = "<Unknown>"
 			} else {
