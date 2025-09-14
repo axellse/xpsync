@@ -52,7 +52,7 @@ async function begin() {
             if (document.querySelector('#closeFinish').checked) {
                 closeWindow()
             }
-        } else if (bytesCopied == 0) {
+        } else if (bytesCopied == 0 && progress == 0) {
             //transferidle.gif
             setAnimation("data:image/gif;base64,R0lGODlhBQEyAPMAAP7+/uzp1/7+Br6/wH+MfX14GQaRAwKDAQAAAAYydgEOhwAS+xO//gAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/idHSUYgY3JvcHBlZCB3aXRoIGh0dHBzOi8vZXpnaWYuY29tL2Nyb3AAIfkEABAA/wAsAAAAAAUBMgAABP8wyEmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwudwjoNNrM7qYBgIFBfjAc7u08FQ2X++12dwgKCnqGTQRwcXOAd44ICwqRh5RHiYsDdY6bkAmRCwiVokGXdIF3DAt3np6ShKGjsTqljY6ptwutn6+yvRZqwCYEmaabuKy5B66ECrC+vZeK0gQliQx3pwfHucl2zAoHzs+jiQMC5ujnAtQiw3AMCZraC6nI8XaD4I/j5HHq6enYgbgE75ojegjjqcIX6YCfcPwqlftHMSCwYL8AFExgEGG9OoP/wjX8AzHioUQVUw6QxhKOuADuOHL0mDDXoF3gGGl6adLMRIAqgw4oIC6RzAM063FboKphnWIle7ZBCbSqUAFEKVi7kynpUlWZHOo8xVPqmJ9XraLLOoHAtZUAAm3zJJYRVEFmfQ4bwLev37+A/WIt6hCOgbiovjJ9OlZe1LxhorWcTNnlMLYSCseNaycVU09MFzfOVhYyFwJpUw8ggGAwhQOGOZ8KTRscyWyPTXsZpvoq66HiYB8eXgtpaEmMNZHWHbm3WnUICGDOvNlAo9nHsSnnxDzy8+8Vo08PUIfzduzIwxXH2x0Mb/DgWY+ve37TLlCgNu1r/wU1/LTy8VRfoyOQuHIfAvqVxh8W7zmnEgLjkVdMLTcZuAwCCLK3oBsOPgdhWWJtJ8h9rijzCoYbutehSqyVpt0jBZIIEjMKpnhFg/9Z1WIGCVqIkyC82NjfilUNgCKPQJL4TTNBCrlbjmkdmQGGS1ZJY41O3gjlcxFegGE+VX6ZpRj+EflPl1N+qeaYZEhXwJtwxinnnHJiyWYsauap55553unnn4AGKugHEQAAOw==")
         } else {
