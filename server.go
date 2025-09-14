@@ -94,6 +94,9 @@ func StartServer() error {
 
 	http.HandleFunc("POST /file/upload/{id}", func(w http.ResponseWriter, r *http.Request) {
 		defer SetDevicePendingAction("", Action{}, r.PathValue("id"))
+		na := GetDevicePendingAction("", r.PathValue("id"))
+		na.UploadPreWriterStatus = "RequestReceived"
+		SetDevicePendingAction("", na, r.PathValue("id"))
 
 		file, header, err := r.FormFile("file")
 		if err != nil {
@@ -101,6 +104,11 @@ func StartServer() error {
 			return
 		}
 		defer file.Close()
+
+		if GetDevicePendingAction("", r.PathValue("id")).UploadPreWriterStatus == "Canceled" {
+			w.Write([]byte("upload failed: canceled"))
+			return
+		}
 
 		fptr, ok := uploads[r.PathValue("id")]
 		if !ok {
@@ -112,7 +120,7 @@ func StartServer() error {
 		pwriter := GetProgressedWriter(writer, header.Size)
 		pwriter.closer = writer
 
-		na := GetDevicePendingAction("", r.PathValue("id"))
+		
 		na.ProgressedWriter = pwriter
 		na.FileName = header.Filename
 		na.BegunTime = time.Now()

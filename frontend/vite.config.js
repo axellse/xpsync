@@ -7,7 +7,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         error: resolve(__dirname, 'error.html'),
-        transfer: resolve(__dirname, 'transfer.html')
+        transfer: resolve(__dirname, 'transfer.html'),
       }
     }
   },

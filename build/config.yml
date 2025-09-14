@@ -11,7 +11,7 @@ info:
   description: "Local area network file transfer program" # The application description
   copyright: "(c) 2025, axell" # Copyright text
   comments: "" # Comments
-  version: "1.0.0" # The application version
+  version: "1.1.1" # The application version
 
 # Dev mode configuration
 dev_mode:

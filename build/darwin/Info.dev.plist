@@ -10,11 +10,11 @@
         <key>CFBundleIdentifier</key>
             <string>me.axell.xpsync</string>
         <key>CFBundleVersion</key>
-            <string>1.0.0</string>
+            <string>1.1.1</string>
         <key>CFBundleGetInfoString</key>
             <string></string>
         <key>CFBundleShortVersionString</key>
-            <string>1.0.0</string>
+            <string>1.1.1</string>
         <key>CFBundleIconFile</key>
             <string>icons</string>
         <key>LSMinimumSystemVersion</key>
