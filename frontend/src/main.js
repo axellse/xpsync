@@ -1,9 +1,8 @@
 import './xp.css';
 import './main.css';
 import './events.js'
-import { App } from "../bindings/changeme";
+import { App } from "../bindings/xpsync";
 
-document.body.style.zoom = "calc(100% / " + window.devicePixelRatio + ")"
 document.querySelector('.refresh').addEventListener("click", async () => {
     document.querySelector('#device').innerHTML = ""
     let devs = await App.GetValidDevices()

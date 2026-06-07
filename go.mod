@@ -1,4 +1,4 @@
-module changeme
+module xpsync
 
 go 1.24.0
 

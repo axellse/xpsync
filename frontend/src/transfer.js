@@ -1,6 +1,6 @@
 import './xp.css';
 import './transfer.css';
-import { App } from "../bindings/changeme";
+import { App } from "../bindings/xpsync";
 import { Window } from '@wailsio/runtime'
 
 const closeWindow = () => {
