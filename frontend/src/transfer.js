@@ -87,7 +87,7 @@ async function begin() {
         }
 
         etl += (bytesCopied == 0 ? "Unknown" : etlSec.toFixed(1) + " sec") + " (" + formatBytes(bytesCopied) + " of " + formatBytes(totalBytes) + " copied)"
-        document.querySelector('.etl').innerHTML = complete ? "think thats gonna be 0 seconds actually" : etl
+        document.querySelector('.etl').innerHTML = complete ? "Transfer complete!" : etl
         document.querySelector('.tri').innerHTML = transferUUID
         document.querySelector('.trr').innerHTML = formatBytes(bytesPerSecond) + "/Sec"
         document.querySelector('.title-bar-text').innerHTML = Math.floor(progress * 100) + "% of " + fileName 
